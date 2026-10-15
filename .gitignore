@@ -9,3 +9,5 @@ frontend/dist/
 .DS_Store
 .pgdata/
 db.sqlite3
+.venv/
+.vercel/

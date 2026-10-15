@@ -155,14 +155,10 @@ PostgreSQL is required (not SQLite) because the tests also verify the database t
 2. Environment variable `VITE_API_URL=https://cmrs-api.onrender.com` (your Render URL).
 3. Deploy. `vercel.json` rewrites all routes to the SPA.
 
-**If deploying both services through the repo-root Vercel project**:
-Set these variables for the backend service in Vercel before redeploying:
-`DJANGO_SECRET_KEY` (a unique, generated secret), `DJANGO_DEBUG=0`, and `DATABASE_URL`
-pointing to a persistent PostgreSQL database. The backend intentionally refuses to load
-without `DJANGO_SECRET_KEY`; SQLite is not suitable for Vercel's serverless runtime.
-Set `DJANGO_ALLOWED_HOSTS` to `.vercel.app` (and add any custom domains). If the frontend
-calls the backend cross-origin rather than through the `/api` rewrite, also set
-`CORS_ALLOWED_ORIGINS` and `CSRF_TRUSTED_ORIGINS` to the frontend origin.
+Deploy the backend on Render rather than as a Vercel service. The root-level Vercel
+multi-service configuration is intentionally not used: the Django backend requires a
+persistent PostgreSQL database and a production secret, both configured by the Render
+blueprint. The frontend calls Render directly through `VITE_API_URL`.
 
 > Render's free web services sleep after inactivity; the first request after a pause takes ~30 s.
 

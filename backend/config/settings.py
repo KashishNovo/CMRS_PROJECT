@@ -45,8 +45,13 @@ if not SECRET_KEY:
         raise RuntimeError("DJANGO_SECRET_KEY must be set when DJANGO_DEBUG is false")
 
 ALLOWED_HOSTS = env_list("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1")
-if os.environ.get("RENDER_EXTERNAL_HOSTNAME"):
-    ALLOWED_HOSTS.append(os.environ["RENDER_EXTERNAL_HOSTNAME"])
+# Platform hostnames are added automatically so the same settings work on Render and Vercel.
+ON_VERCEL = bool(os.environ.get("VERCEL"))
+PLATFORM_HOSTS = [
+    os.environ.get(name, "").strip()
+    for name in ("RENDER_EXTERNAL_HOSTNAME", "VERCEL_URL", "VERCEL_BRANCH_URL", "VERCEL_PROJECT_PRODUCTION_URL")
+]
+ALLOWED_HOSTS += [h for h in PLATFORM_HOSTS if h and h not in ALLOWED_HOSTS]
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -111,7 +116,9 @@ else:
         "default": dj_database_url.config(
             env="DATABASE_URL",
             default="postgres://postgres:postgres@localhost:5432/cmrs",
-            conn_max_age=600,
+            # Serverless instances come and go; keep connections short-lived there.
+            conn_max_age=60 if ON_VERCEL else 600,
+            conn_health_checks=True,
         )
     }
 # Every API request runs in one transaction: a failed business rule never leaves half-written rows.
@@ -191,6 +198,8 @@ SPECTACULAR_SETTINGS = {
 
 CORS_ALLOWED_ORIGINS = env_list("CORS_ALLOWED_ORIGINS", "http://localhost:5173")
 CSRF_TRUSTED_ORIGINS = env_list("CSRF_TRUSTED_ORIGINS", "http://localhost:5173")
+# On Vercel the frontend and API share one origin, so the Django admin's CSRF check needs that origin.
+CSRF_TRUSTED_ORIGINS += [f"https://{h}" for h in PLATFORM_HOSTS if h and f"https://{h}" not in CSRF_TRUSTED_ORIGINS]
 
 if not DEBUG:
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
