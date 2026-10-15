@@ -45,6 +45,15 @@ DROP FUNCTION IF EXISTS cmrs_protect_collection();
 """
 
 
+def _postgres_only(sql):
+    """The triggers are PostgreSQL-specific; a local SQLite quick-start skips them."""
+    def run(apps, schema_editor):
+        if schema_editor.connection.vendor == "postgresql":
+            with schema_editor.connection.cursor() as cursor:
+                cursor.execute(sql)
+    return run
+
+
 class Migration(migrations.Migration):
     dependencies = [("cash", "0001_initial"), ("core", "0001_initial")]
-    operations = [migrations.RunSQL(SQL, REVERSE)]
+    operations = [migrations.RunPython(_postgres_only(SQL), _postgres_only(REVERSE))]

@@ -51,7 +51,7 @@ FILTER_PARAMS = [
 
 
 def money(value) -> str:
-    return str(value if value is not None else ZERO)
+    return str((value if value is not None else ZERO).quantize(Decimal("0.01")))
 
 
 def total(qs, field):

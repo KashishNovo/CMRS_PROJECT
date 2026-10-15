@@ -57,6 +57,15 @@ verifies it (manager) can't confirm the bank credit, and Finance can't create th
 
 ## Run locally
 
+### Quickest — Windows, double-click
+
+Needs only **Python 3.12+** and **Node.js LTS**. Double-click **`run-local.bat`** in the project folder. It
+creates the virtual environment, installs packages, sets up a local SQLite database with demo data, starts
+the backend (http://localhost:8000) and frontend (http://localhost:5173) in two windows, and opens the
+browser. Close those two windows to stop the app. To use PostgreSQL instead, edit `backend\.env` and set
+`DATABASE_URL=postgres://...` (SQLite is a local convenience only: the database-level triggers and the
+test suite need PostgreSQL, and production runs on PostgreSQL).
+
 ### Option A — Docker (one command)
 
 ```bash
@@ -108,7 +117,7 @@ PostgreSQL is required (not SQLite) because the tests also verify the database t
 |---|---|---|---|
 | `DJANGO_SECRET_KEY` | yes (prod) | dev key when `DJANGO_DEBUG=1` | Signs JWTs and sessions. App refuses to start without it in production. |
 | `DJANGO_DEBUG` | no | `0` | `1` for local development only |
-| `DATABASE_URL` | yes | `postgres://postgres:postgres@localhost:5432/cmrs` | PostgreSQL connection string |
+| `DATABASE_URL` | yes | `postgres://postgres:postgres@localhost:5432/cmrs` | PostgreSQL connection string, or `sqlite` for the local quick-start |
 | `DJANGO_ALLOWED_HOSTS` | yes (prod) | `localhost,127.0.0.1` | Comma-separated. Render's hostname is added automatically. |
 | `CORS_ALLOWED_ORIGINS` | yes (prod) | `http://localhost:5173` | Frontend origin(s), comma-separated |
 | `CSRF_TRUSTED_ORIGINS` | yes (prod) | `http://localhost:5173` | Same as above (used by Django admin) |

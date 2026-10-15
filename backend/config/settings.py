@@ -14,6 +14,20 @@ import dj_database_url
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
+def _load_dotenv(path: Path) -> None:
+    """Read backend/.env if present, so local runs need no exported variables. Real env vars win."""
+    if not path.exists():
+        return
+    for line in path.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if line and not line.startswith("#") and "=" in line:
+            key, value = line.split("=", 1)
+            os.environ.setdefault(key.strip(), value.strip().strip('"').strip("'"))
+
+
+_load_dotenv(BASE_DIR / ".env")
+
+
 def env_bool(name: str, default: bool = False) -> bool:
     return os.environ.get(name, str(default)).strip().lower() in {"1", "true", "yes", "on"}
 
@@ -89,13 +103,17 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "config.wsgi.application"
 
-DATABASES = {
-    "default": dj_database_url.config(
-        env="DATABASE_URL",
-        default="postgres://postgres:postgres@localhost:5432/cmrs",
-        conn_max_age=600,
-    )
-}
+if os.environ.get("DATABASE_URL", "").strip().lower() == "sqlite":
+    # Zero-install local quick-start (run-local scripts). Production and the test suite use PostgreSQL.
+    DATABASES = {"default": {"ENGINE": "django.db.backends.sqlite3", "NAME": BASE_DIR / "db.sqlite3"}}
+else:
+    DATABASES = {
+        "default": dj_database_url.config(
+            env="DATABASE_URL",
+            default="postgres://postgres:postgres@localhost:5432/cmrs",
+            conn_max_age=600,
+        )
+    }
 # Every API request runs in one transaction: a failed business rule never leaves half-written rows.
 DATABASES["default"]["ATOMIC_REQUESTS"] = True
 

@@ -74,8 +74,12 @@ class Command(BaseCommand):
     def handle(self, *args, **opts):
         if opts["reset"]:
             with connection.cursor() as c:
-                # TRUNCATE bypasses the row-level immutability triggers by design (demo reset only).
-                c.execute("TRUNCATE " + ", ".join(TABLES) + " RESTART IDENTITY CASCADE")
+                if connection.vendor == "postgresql":
+                    # TRUNCATE bypasses the row-level immutability triggers by design (demo reset only).
+                    c.execute("TRUNCATE " + ", ".join(TABLES) + " RESTART IDENTITY CASCADE")
+                else:  # SQLite quick-start: no triggers, plain deletes in dependency order
+                    for table in TABLES:
+                        c.execute(f"DELETE FROM {table}")
             User.objects.filter(username__in=[s[0] for s in STAFF]).delete()
             Branch.objects.filter(code__in=[b[0] for b in BRANCHES]).delete()
         elif Branch.objects.exists():
