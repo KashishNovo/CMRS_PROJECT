@@ -28,7 +28,7 @@ function RequireAuth({ children }: { children: ReactNode }) {
 function Only({ roles, children }: { roles: Role[]; children: ReactNode }) {
   const { hasRole } = useAuth()
   return hasRole(...roles) ? <>{children}</> : <Empty title="Not available for your role">Ask an administrator if you need access.</Empty>
-}
+} 
 
 function Home() {
   const { user } = useAuth()
